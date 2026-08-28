@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Identity Portal - Malta</title>
+    <style>
+        :root {
+            --eid-teal: #00a8ab;
+            --eid-gray: #718096;
+            --eid-dark: #2d3748;
+            --bg-light: #f8fbfc;
+            --border-light: #edf2f7;
+            --lock-red: #e53e3e;
+        }
+
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: white; color: var(--eid-dark); -webkit-font-smoothing: antialiased; }
+        
+        #auth-screen { position: fixed; inset: 0; background: white; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .auth-card { width: 100%; max-width: 340px; text-align: center; }
+        .auth-input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 16px; box-sizing: border-box; outline: none; }
+        .auth-btn { width: 100%; padding: 14px; background: var(--eid-teal); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px; font-size: 16px; }
+
+        header { display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; border-bottom: 1px solid var(--border-light); background: white; position: sticky; top: 0; z-index: 100; }
+        .user-top { display: flex; align-items: center; gap: 10px; text-align: right; }
+        .user-top b { display: block; font-size: 13px; color: var(--eid-teal); }
+        .top-avatar { width: 40px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #eee; background: #f7f7f7; }
+
+        nav { display: flex; border-bottom: 4px solid #f7fafc; background: white; }
+        .tab { flex: 1; text-align: center; padding: 12px 5px; font-size: 10px; font-weight: 800; color: var(--eid-gray); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; text-transform: uppercase; }
+        .tab.active { color: var(--eid-teal); border-bottom: 3px solid var(--eid-teal); }
+        .nav-icon { width: 32px; height: 32px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+
+        .section { display: none; max-width: 500px; margin: 0 auto; padding: 20px; text-align: center; }
+        .section.active { display: block; }
+
+        .main-photo { width: 150px; height: 190px; object-fit: cover; margin: 20px auto 30px; display: block; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; border: 1px dashed #cbd5e0; background: #fcfcfc; }
+
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid #f1f5f9; }
+        .info-item { padding: 25px 10px; display: flex; flex-direction: column; align-items: center; cursor: pointer; border-bottom: 1px solid #f1f5f9; }
+        .info-item:nth-child(odd) { border-right: 1px solid #f1f5f9; }
+        
+        .address-item { padding: 30px 20px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.2s; }
+        .address-item:hover { background: #fafcfe; }
+
+        .icon-circle { width: 54px; height: 54px; background: #f0f9fa; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+        .icon-svg { width: 28px; height: 28px; stroke: var(--eid-teal); stroke-width: 2; fill: none; }
+
+        .val-main { font-weight: 700; font-size: 14px; margin: 0; color: var(--eid-dark); }
+        .val-sub { font-size: 11px; color: var(--eid-gray); margin-top: 4px; font-weight: 600; }
+        
+        .lock-btn { width: 100%; padding: 16px; background: var(--lock-red); color: white; border: none; border-radius: 10px; font-weight: 800; cursor: pointer; margin: 25px 0; font-size: 14px; }
+        .logout-btn { color: var(--eid-gray); border: none; background: none; font-weight: 600; cursor: pointer; font-size: 13px; text-decoration: underline; margin-top: 10px; }
+        .placeholder { color: #cbd5e0; font-style: italic; }
+    </style>
+</head>
+<body>
+
+<div id="auth-screen">
+    <div class="auth-card">
+        <h2 style="color: var(--eid-teal); font-weight: 900; margin-bottom: 5px; font-size: 30px;">e-ID Portal</h2>
+        <p style="color: var(--eid-gray); font-size: 14px; margin-bottom: 30px;">Identity Malta Group</p>
+        <input type="text" id="id-in" class="auth-input" placeholder="ID Number">
+        <input type="password" id="pass-in" class="auth-input" placeholder="Password">
+        <button class="auth-btn" onclick="handleAuth()">Sign In</button>
+        <p style="margin-top:20px; font-size:14px; color: var(--eid-teal); cursor:pointer; font-weight: 700;" onclick="toggleAuth()" id="toggle-text">Create an account</p>
+    </div>
+</div>
+
+<div id="main-app" style="display:none;">
+    <header>
+        <div style="padding: 10px;"><div style="width:25px; height:2px; background:var(--eid-teal); box-shadow: 0 7px 0 var(--eid-teal), 0 -7px 0 var(--eid-teal);"></div></div>
+        <div class="user-top">
+            <div><b id="h-name">---</b><span id="h-id">---</span></div>
+            <img class="top-avatar" id="mini-img" src="">
+        </div>
+    </header>
+
+    <nav>
+        <div class="tab active" onclick="switchTab('info', this)">
+            <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M12 14c-4 0-7 2-7 4v2h14v-2c0-2-3-4-7-4z"/><circle cx="12" cy="19" r="1" fill="currentColor"/></svg>
+            MY INFO
+        </div>
+        <div class="tab" onclick="switchTab('privacy', this)">
+            <svg class="nav-icon" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="1"/><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>
+            PRIVACY & SECURITY
+        </div>
+        <div class="tab" onclick="switchTab('help', this)">
+            <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            HELP
+        </div>
+    </nav>
+
+    <div id="info" class="section active">
+        <img id="main-photo" class="main-photo" src="" onclick="triggerUpload()" title="Upload Photo">
+        <input type="file" id="up" hidden onchange="updatePhoto(this)" accept="image/*">
+
+        <div class="info-grid">
+            <div class="info-item" onclick="editField('name')">
+                <div class="icon-circle"><svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="1"/><rect x="6" y="9" width="4" height="4"/><line x1="12" y1="10" x2="18" y2="10"/><line x1="12" y1="14" x2="16" y2="14"/></svg></div>
+                <p class="val-main" id="n-name">---</p>
+                <p class="val-sub" id="n-id-sub">---</p>
+            </div>
+            <div class="info-item" onclick="editField('dob')">
+                <div class="icon-circle"><svg class="icon-svg" viewBox="0 0 24 24"><rect x="5" y="13" width="14" height="7"/><line x1="5" y1="16" x2="19" y2="16"/><rect x="11" y="9" width="2" height="4"/><circle cx="12" cy="7" r="1" fill="var(--eid-teal)"/></svg></div>
+                <p class="val-main" id="n-dob">---</p>
+            </div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-item" onclick="editField('email')">
+                <div class="icon-circle"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+                <p class="val-sub" id="n-email">---</p>
+            </div>
+            <div class="info-item" onclick="editField('phone')">
+                <div class="icon-circle"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+                <p class="val-sub" id="n-phone">---</p>
+            </div>
+        </div>
+
+        <div class="address-item" onclick="editField('addr')">
+            <div class="icon-circle" style="margin: 0 auto 12px;"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+            <p class="val-sub" id="n-addr" style="color: var(--eid-dark); max-width: 280px; margin: 0 auto; line-height: 1.4;">---</p>
+        </div>
+
+        <div id="lock-container">
+            <button class="lock-btn" id="lock-trigger" onclick="lockProfile()">CONFIRM & LOCK DETAILS</button>
+        </div>
+
+        <button class="logout-btn" onclick="logout()">Log Out</button>
+    </div>
+
+    <div id="privacy" class="section">
+        <h3 style="color: var(--eid-teal);">Privacy & Security</h3>
+        <p>Your session is encrypted and secure.</p>
+    </div>
+
+    <div id="help" class="section">
+        <h3 style="color: var(--eid-teal);">Support</h3>
+        <p>Email: enquiries@identitmalta.com</p>
+    </div>
+</div>
+
+<script>
+    let isLoginMode = true;
+    let currentUser = null;
+
+    window.onload = function() {
+        const activeId = localStorage.getItem('active_session');
+        const db = JSON.parse(localStorage.getItem('eid_db')) || {};
+        if(activeId && db[activeId]) {
+            currentUser = db[activeId];
+            showApp();
+        }
+    }
+
+    function toggleAuth() {
+        isLoginMode = !isLoginMode;
+        document.getElementById('toggle-text').innerText = isLoginMode ? "Create an account" : "Back to Sign In";
+    }
+
+    function handleAuth() {
+        const idInput = document.getElementById('id-in').value.toUpperCase().trim();
+        const passInput = document.getElementById('pass-in').value;
+        if(!idInput || !passInput) return;
+        let db = JSON.parse(localStorage.getItem('eid_db')) || {};
+
+        if (isLoginMode) {
+            if (db[idInput] && db[idInput].password === passInput) {
+                currentUser = db[idInput];
+                localStorage.setItem('active_session', idInput);
+                showApp();
+            } else { alert("Login failed."); }
+        } else {
+            // New accounts start completely blank
+            db[idInput] = { 
+                id: idInput, password: passInput, 
+                name: "", dob: "", 
+                email: "", phone: "", addr: "",
+                photo: "",
+                isLocked: false
+            };
+            localStorage.setItem('eid_db', JSON.stringify(db));
+            alert("Account created! Log in to edit your profile."); toggleAuth();
+        }
+    }
+
+    function showApp() {
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+        updateUI();
+    }
+
+    function updateUI() {
+        if(!currentUser) return;
+        document.getElementById('h-name').innerText = currentUser.name || "Set Name";
+        document.getElementById('h-id').innerText = currentUser.id;
+        document.getElementById('n-name').innerText = currentUser.name || "Click to set Name";
+        document.getElementById('n-id-sub').innerText = "(" + currentUser.id + ")";
+        document.getElementById('n-dob').innerText = currentUser.dob || "Click to set DOB";
+        document.getElementById('n-email').innerText = currentUser.email || "Click to set Email";
+        document.getElementById('n-phone').innerText = currentUser.phone || "Click to set Phone";
+        document.getElementById('n-addr').innerText = currentUser.addr || "Click to set Address";
+        document.getElementById('main-photo').src = currentUser.photo || "";
+        document.getElementById('mini-img').src = currentUser.photo || "";
+        
+        if(currentUser.isLocked) {
+            const btn = document.getElementById('lock-trigger');
+            if(btn) btn.remove();
+        }
+    }
+
+    function editField(field) {
+        if(currentUser.isLocked) return;
+        let newVal = prompt("Set " + field.toUpperCase() + ":", currentUser[field]);
+        if (newVal !== null) { 
+            currentUser[field] = newVal; 
+            saveData(); 
+        }
+    }
+
+    function lockProfile() {
+        if(confirm("Once locked, you can't edit again. Proceed?")) {
+            currentUser.isLocked = true;
+            saveData();
+        }
+    }
+
+    function triggerUpload() { 
+        if(!currentUser.isLocked) document.getElementById('up').click(); 
+    }
+
+    function updatePhoto(input) {
+        if(input.files[0]) {
+            let reader = new FileReader();
+            reader.onload = (e) => { currentUser.photo = e.target.result; saveData(); };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function saveData() {
+        let db = JSON.parse(localStorage.getItem('eid_db'));
+        db[currentUser.id] = currentUser;
+        localStorage.setItem('eid_db', JSON.stringify(db));
+        updateUI();
+    }
+
+    function switchTab(tId, el) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(tId).classList.add('active');
+        el.classList.add('active');
+    }
+
+    function logout() { localStorage.removeItem('active_session'); location.reload(); }
+</script>
+</body>
+</html>
